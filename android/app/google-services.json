@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "422622892960",
+    "project_id": "ticketapp-events",
+    "storage_bucket": "ticketapp-events.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:422622892960:android:2ecad2860a3859f4334ac5",
+        "android_client_info": {
+          "package_name": "com.example.myapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC3zZT8ooMp9mbVOjmr4PKp5FoODfoFzws"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
