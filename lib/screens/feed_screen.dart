@@ -118,18 +118,20 @@ class CategoryFeed extends StatelessWidget {
     return StreamBuilder<QuerySnapshot>(
       stream: query.snapshots(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData)
+        if (!snapshot.hasData) {
           return const Center(
             child: CircularProgressIndicator(color: Color(0xFF00FFA3)),
           );
+        }
         final docs = snapshot.data!.docs;
-        if (docs.isEmpty)
+        if (docs.isEmpty) {
           return const Center(
             child: Text(
               "Coming soon...",
               style: TextStyle(color: Colors.white24),
             ),
           );
+        }
 
         return PageView.builder(
           scrollDirection: Axis.vertical,

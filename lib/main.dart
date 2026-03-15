@@ -61,7 +61,7 @@ class AuthGate extends StatelessWidget {
 
         // 3. If they ARE logged in, go to the main app navigation
         return const NavShell();
-      },
+      }
     );
   }
 }
