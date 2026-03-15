@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/event_model.dart';
+import '../services/database_service.dart';
 
 class CheckoutSheet extends StatefulWidget {
   final NightlifeEvent event;
@@ -98,9 +99,37 @@ class _CheckoutSheetState extends State<CheckoutSheet> {
 
           SThemeButton(
             text: "PAY WITH MOBILE MONEY",
-            onPressed: () {
-              Navigator.pop(context);
-              // Future: Trigger M-Pesa/Tigo Pesa STK Push
+            onPressed: () async {
+              try {
+                // 1. Prepare the ticket data from the current event
+                final ticketData = {
+                  'eventTitle': widget.event.title,
+                  'venue': widget.event.venue,
+                  'price': widget.event.price,
+                  'imageUrl': widget.event.imageUrl,
+                };
+
+                // 2. Call the database service to save it
+                await DatabaseService().saveTicket(ticketData);
+
+                // 3. Show success and close the sheet
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Ticket Purchased! Check your profile."),
+                      backgroundColor: Color(0xFF00FFA3),
+                    ),
+                  );
+                  Navigator.pop(context); // Close the sheet
+                }
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text("Error: $e"),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
             },
           ),
           const SizedBox(height: 10),

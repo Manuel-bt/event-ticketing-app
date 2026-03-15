@@ -1,113 +1,88 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 class TicketsScreen extends StatelessWidget {
   const TicketsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text(
-          "My Tickets",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        title: const Text("My Tickets", style: TextStyle(fontWeight: FontWeight.bold)),
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(15),
-        itemCount: 2, // Placeholder for 2 fake tickets
-        itemBuilder: (context, index) {
-          return Padding(
-            // FIXED: Changed .bottom(20) to .only(bottom: 20)
-            padding: const EdgeInsets.only(bottom: 20),
-            child: Container(
-              height: 160,
-              decoration: BoxDecoration(
-                color: const Color(0xFF1A1A1A),
-                borderRadius: BorderRadius.circular(15),
-                border: Border.all(color: Colors.white10),
-              ),
-              child: Row(
-                children: [
-                  // Left Side: Event Details
-                  Expanded(
-                    flex: 2,
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text(
-                            "VIP PASS",
-                            style: TextStyle(
-                              color: Color(0xFF00FFA3),
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                            ),
-                          ),
-                          const SizedBox(height: 5),
-                          const Text(
-                            "SATURDAY NIGHT FEVER",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            "Elements, Masaki",
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.6),
-                              fontSize: 12,
-                            ),
-                          ),
-                          const SizedBox(height: 5),
-                          const Text(
-                            "March 14, 2026",
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('users')
+            .doc(user?.uid)
+            .collection('tickets')
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) return const Center(child: CircularProgressIndicator(color: Color(0xFF00FFA3)));
+          
+          final tickets = snapshot.data!.docs;
 
-                  // Visual Divider (The "Dotted" line look)
-                  const VerticalDivider(
-                    color: Colors.white10,
-                    thickness: 1,
-                    indent: 20,
-                    endIndent: 20,
-                  ),
+          if (tickets.isEmpty) {
+            return const Center(
+              child: Text("No tickets yet. Go find a vibe!", style: TextStyle(color: Colors.white24)),
+            );
+          }
 
-                  // Right Side: QR Placeholder
-                  Container(
-                    width: 100,
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.only(
-                        topRight: Radius.circular(15),
-                        bottomRight: Radius.circular(15),
-                      ),
-                    ),
-                    child: const Center(
-                      child: Icon(
-                        Icons.qr_code_2,
-                        color: Colors.black,
-                        size: 60,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          return ListView.builder(
+            padding: const EdgeInsets.all(20),
+            itemCount: tickets.length,
+            itemBuilder: (context, index) {
+              final ticket = tickets[index].data() as Map<String, dynamic>;
+              return _buildTicketCard(context, ticket, tickets[index].id);
+            },
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildTicketCard(BuildContext context, Map<String, dynamic> ticket, String ticketId) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A1A1A),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFF00FFA3).withOpacity(0.3)),
+      ),
+      child: Row(
+        children: [
+          // QR CODE
+          QrImageView(
+            data: ticketId, // The ID the bouncer scans
+            version: QrVersions.auto,
+            size: 80.0,
+            eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square, color: Color(0xFF00FFA3)),
+            dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square, color: Colors.white),
+          ),
+          const SizedBox(width: 20),
+          // TICKET INFO
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  ticket['eventTitle']?.toUpperCase() ?? 'EVENT',
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+                const SizedBox(height: 5),
+                Text(ticket['venue'] ?? 'Venue', style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                const SizedBox(height: 10),
+                const Text("VALID TICKET", style: TextStyle(color: Color(0xFF00FFA3), fontWeight: FontWeight.bold, fontSize: 10)),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
